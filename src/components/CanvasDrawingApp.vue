@@ -140,6 +140,7 @@ function initiliazeCanvas() {
 }
 
 function createPoint(event) {
+  if (event.type == "touchstart") event = event.touches[0];
   let x = parseInt(event.pageX - canvasOffsetLeft);
   let y = parseInt(event.pageY - canvasOffsetTop);
   points.push([x, y]);
@@ -190,6 +191,7 @@ function finishStep() {
 //  DRAW
 
 function drawCanvas(event) {
+  if (event.type == "touchmove") event = event.touches[0];
   let x = parseInt(event.pageX - canvasOffsetLeft);
   let y = parseInt(event.pageY - canvasOffsetTop);
   if (isPainting.value) {
@@ -253,6 +255,7 @@ function drawCanvas(event) {
 }
 
 function finishDrawing(event) {
+  if (event.type == "touchend") event = event.changedTouches[0];
   let x = parseInt(event.pageX - canvasOffsetLeft);
   if (x > width) x = width;
   let y = parseInt(event.pageY - canvasOffsetTop);
@@ -434,11 +437,13 @@ function initializeFillingPoint() {
 
 function prevStateImage() {
   imageState.value--;
+  resetDrawVariables();
   changeImageState(-1, clearImage);
 }
 
 function nextStateImage() {
   imageState.value++;
+  resetDrawVariables();
   changeImageState(1, clearImage);
 }
 
@@ -446,12 +451,14 @@ function nextStateImage() {
 function prevImage() {
   id.value--;
   layerIsDisplayed.value = false;
+  resetDrawVariables();
   getImage(clearImage);
 }
 
 function nextImage() {
   id.value++;
   layerIsDisplayed.value = false;
+  resetDrawVariables();
   getImage(clearImage);
 }
 </script>
@@ -464,13 +471,13 @@ function nextImage() {
     </div>
   </div>
 
-  <div id="drawingApp" @mouseup="finishDrawing">
-    <Shapes id="shapes" />
+  <div id="drawingApp" @mouseup="finishDrawing" @touchend="finishDrawing">
+    <Shapes />
     <div id="canvandcounter">
       <div id="aboveCanvas" :style="{ width: width + 'px' }">
         <div id="buttons">
           <div v-if="id > 0" class="copyButton">
-            <div id="copyLast" @click.left="copyLast">
+            <div id="copyLast" @click="copyLast">
               <img src="./icons/copy.svg" alt="Copy Icon" />
             </div>
             <div id="copyOther">
@@ -494,13 +501,6 @@ function nextImage() {
             <img src="./icons/plusLayer.svg" alt="Plus Layer Icon" />
           </div>
 
-          <div v-if="canvasState" @click="cancelDrawing">
-            <img src="./icons/cross.svg" alt="Cross Icon" />
-          </div>
-          <div v-else class="desactivated">
-            <img src="./icons/cross.svg" alt="Cross Icon" />
-          </div>
-
           <div v-if="isSelected" @click="eraseArea">
             <img src="./icons/trash.svg" alt="Trash Icon" />
           </div>
@@ -522,7 +522,9 @@ function nextImage() {
         :width="width"
         :height="height"
         @mousedown="createPoint"
+        @touchstart="createPoint"
         @mousemove="drawCanvas"
+        @touchmove="drawCanvas"
       ></canvas>
       <div
         id="loadingLayer"
@@ -533,8 +535,9 @@ function nextImage() {
       <div
         v-if="layerIsDisplayed"
         @mousedown="createPoint"
+        @touchstart="createPoint"
         @mousemove="drawCanvas"
-        @keydown="cancelDrawing"
+        @touchmove="drawCanvas"
         id="layer"
         :style="{ width: width + 'px', height: height + 'px' }"
       ></div>
@@ -575,14 +578,14 @@ function nextImage() {
         </div>
       </div>
     </div>
-    <Parameters id="parameters" />
+    <Parameters />
   </div>
 </template>
 
 <style scoped>
 #voile {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
@@ -617,16 +620,12 @@ function nextImage() {
 }
 
 #drawingApp {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-}
-
-#shapes {
-  transform: translateY(-3%);
 }
 
 #canvandcounter {
@@ -650,7 +649,8 @@ function nextImage() {
   width: 35%;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: flex-start;
+  gap: 15px;
 }
 
 #buttons > div {
@@ -826,9 +826,5 @@ function nextImage() {
 
 #imagenavig div.next {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
-}
-
-#parameters {
-  transform: translateY(-3%);
 }
 </style>
